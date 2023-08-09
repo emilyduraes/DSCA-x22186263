@@ -122,7 +122,7 @@ public class ControllerGUI implements ActionListener {
         // Set the panel to add buttons
         JPanel panel = new JPanel();
 
-        // Set the BoxLayout to be X_AXIS: from left to right
+        // Set the BoxLayout to be Y_AXIS: from top to bottom
         BoxLayout boxlayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
 
         panel.setLayout(boxlayout);
