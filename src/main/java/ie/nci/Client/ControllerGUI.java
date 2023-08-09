@@ -4,21 +4,32 @@ import ie.nci.PatientRegistrationService.Patient;
 import ie.nci.PatientRegistrationService.PatientRegistrationServiceGrpc;
 import ie.nci.PatientRegistrationService.PatientRequest;
 import ie.nci.PatientRegistrationService.PatientResponse;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import ie.nci.Server.JmDnsServiceDiscovery;
+import io.grpc.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public class ControllerGUI implements ActionListener {
+    private static final Logger logger = Logger.getLogger(ControllerGUI.class.getName());
+    private final PatientRegistrationServiceGrpc.PatientRegistrationServiceBlockingStub blockingStubPatientRegistration;
 
     private JTextField PatientRegistrationPPSEntry, PatientRegistrationNameEntry,
                        PatientRegistrationAgeEntry, PatientRegistrationAddressEntry,
                        PatientRegistrationReply;
 
+    /** Construct client for accessing server using the existing channel. */
+    public ControllerGUI(Channel channel) {
+        // The sync calls (blocking)
+        blockingStubPatientRegistration = PatientRegistrationServiceGrpc.newBlockingStub(channel);
+    }
+
+    //panel for the service Patient Registration
     private JPanel getPatientRegistrationJPanel() {
 
         JPanel panel = new JPanel();
@@ -74,14 +85,7 @@ public class ControllerGUI implements ActionListener {
         String label = button.getActionCommand();
 
         if (label.equals("Register Patient")) {
-            System.out.println("Patient Registration to be invoked ...");
-
-
-            /*
-             *
-             */
-            ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build();
-            PatientRegistrationServiceGrpc.PatientRegistrationServiceBlockingStub blockingStub = PatientRegistrationServiceGrpc.newBlockingStub(channel);
+            logger.info("Calling gRPC unary type Patient Registration (from the client side)");
 
             //preparing message to send
             String pps = PatientRegistrationPPSEntry.getText();
@@ -100,23 +104,36 @@ public class ControllerGUI implements ActionListener {
 
 
             //retrieving reply from service
-            PatientResponse response = blockingStub.register(request);
-            System.out.println("Patient created!");
+            PatientResponse response = blockingStubPatientRegistration.register(request);
+            logger.info("Patient created!");
             PatientRegistrationReply.setText(String.valueOf(response.getPatient()));
 
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
-        ControllerGUI gui = new ControllerGUI();
+        String target;
 
-        gui.build();
+        // Service discovery part
+        JmDnsServiceDiscovery jmDnsServiceDiscovery = new JmDnsServiceDiscovery();
+        JmDnsServiceDiscovery.find("_gRPCserver._tcp.local.");	// service name
+        do {
+            target = jmDnsServiceDiscovery.getLocGrpc();
+            System.out.println("jmDnsServiceDiscovery: " + target);
+        } while (target.length()<2);		// wait for the service to be discovered
+
+        ManagedChannel channel = Grpc.newChannelBuilder(target, InsecureChannelCredentials.create())
+                .build();
+
+        ControllerGUI client = new ControllerGUI(channel);
+        client.build();			// unary type
+
     }
 
     private void build() {
 
-        JFrame frame = new JFrame("Service Controller");
+        JFrame frame = new JFrame("Services Controller");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Set the panel to add buttons
