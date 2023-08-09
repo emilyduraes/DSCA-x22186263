@@ -77,6 +77,9 @@
                     <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+                    <protoSourceRoot>
+                        ${basedir}/src/main/resources
+                    </protoSourceRoot>
                 </configuration>
                 <executions>
                     <execution>

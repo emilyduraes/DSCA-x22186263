@@ -12,7 +12,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class ControllerGUI implements ActionListener {
