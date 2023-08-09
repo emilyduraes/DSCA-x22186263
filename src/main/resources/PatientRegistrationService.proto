@@ -1,0 +1,28 @@
+// Unary API
+
+syntax = "proto3";
+option java_multiple_files =  true;
+option java_package = "ie.nci.PatientRegistrationService";
+option java_outer_classname = "PatientRegistrationServiceImpl";
+
+package PatientRegistrationService;
+
+service PatientRegistrationService {
+  rpc register(PatientRequest) returns (PatientResponse);
+}
+
+message Patient {
+  string pps = 1;
+  string name = 2;
+  int32 age = 3;
+  string address = 4;
+}
+
+message PatientRequest {
+  Patient patient = 1;
+}
+
+message PatientResponse {
+  Patient patient = 1;
+}
+
