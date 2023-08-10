@@ -1,22 +1,28 @@
 package ie.nci.Client;
 
+import ie.nci.HealthBehaviorLoggingService.*;
 import ie.nci.PatientRegistrationService.Patient;
 import ie.nci.PatientRegistrationService.PatientRegistrationServiceGrpc;
 import ie.nci.PatientRegistrationService.PatientRequest;
 import ie.nci.PatientRegistrationService.PatientResponse;
 import ie.nci.Server.JmDnsServiceDiscovery;
 import io.grpc.*;
+import io.grpc.stub.StreamObserver;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Random;
 import java.util.logging.Logger;
 
 public class ControllerGUI implements ActionListener {
     private static final Logger logger = Logger.getLogger(ControllerGUI.class.getName());
     private final PatientRegistrationServiceGrpc.PatientRegistrationServiceBlockingStub blockingStubPatientRegistration;
+    private final HealthBehaviorLoggingServiceGrpc.HealthBehaviorLoggingServiceStub asyncHealthBehaviorLoggingServiceStub;
+    static Random rand = new Random();
+    static ExercisesTypes randExercise = ExercisesTypes.randomExercisesTypes();
 
     private JTextField PatientRegistrationPPSEntry, PatientRegistrationNameEntry,
                        PatientRegistrationAgeEntry, PatientRegistrationAddressEntry,
@@ -26,6 +32,9 @@ public class ControllerGUI implements ActionListener {
     public ControllerGUI(Channel channel) {
         // The sync calls (blocking)
         blockingStubPatientRegistration = PatientRegistrationServiceGrpc.newBlockingStub(channel);
+
+        // async calls (for client-streaming)
+        asyncHealthBehaviorLoggingServiceStub = HealthBehaviorLoggingServiceGrpc.newStub(channel);
     }
 
     //panel for the service Patient Registration
@@ -104,7 +113,6 @@ public class ControllerGUI implements ActionListener {
 
             //retrieving reply from service
             PatientResponse response = blockingStubPatientRegistration.register(request);
-            logger.info("Patient created!");
             PatientRegistrationReply.setText(String.valueOf(response.getPatient()));
 
         }
@@ -127,7 +135,7 @@ public class ControllerGUI implements ActionListener {
 
         ControllerGUI client = new ControllerGUI(channel);
         client.build();			// unary type
-
+        client.registerExercise(); // client-streaming type
     }
 
     private void build() {
@@ -155,5 +163,43 @@ public class ControllerGUI implements ActionListener {
         frame.add(panel);
         frame.pack();
         frame.setVisible(true);
+    }
+
+    public void registerExercise() {
+        logger.info("Calling gRPC client streaming type (from the client side)");
+
+        StreamObserver<ExerciseResponse> responseObserver = new StreamObserver<ExerciseResponse>() {
+            @Override
+            public void onNext(ExerciseResponse value) {
+                System.out.println("Received: " + value.getExercise());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                t.printStackTrace();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Stream completed");
+            }
+        };
+
+        // send a stream back to the server
+        StreamObserver<ExerciseRequest> requestObserver = asyncHealthBehaviorLoggingServiceStub.registerExercise(responseObserver);
+        requestObserver.onNext(ExerciseRequest.newBuilder().setExercise(Exercise.newBuilder()
+                                                                                .setTime(rand.nextInt(6))
+                                                                                .setType(randExercise.toString())
+                                                                                .build())
+                                                                        .build());
+        for (int i=0; i< rand.nextInt(10); i++){
+            requestObserver.onNext(ExerciseRequest.newBuilder().setExercise(Exercise.newBuilder()
+                                                                                    .setTime(rand.nextInt(6))
+                                                                                    .setType(randExercise.toString())
+                                                                                    .build())
+                                                                            .build());
+        }
+
+        requestObserver.onCompleted();
     }
 }

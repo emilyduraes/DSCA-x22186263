@@ -1,0 +1,25 @@
+// Client Streaming API
+
+syntax = "proto3";
+option java_multiple_files =  true;
+option java_package = "ie.nci.HealthBehaviorLoggingService";
+option java_outer_classname = "HealthBehaviorLoggingServiceImpl";
+
+package HealthBehaviorLoggingService;
+
+service HealthBehaviorLoggingService {
+  rpc registerExercise(stream ExerciseRequest) returns (ExerciseResponse);
+}
+
+message Exercise {
+  string type = 1;
+  int32 time = 2;
+}
+
+message ExerciseRequest {
+  Exercise exercise = 1;
+}
+
+message ExerciseResponse {
+  Exercise exercise = 1;
+}

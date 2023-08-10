@@ -1,5 +1,6 @@
 package ie.nci.Server;
 
+import ie.nci.HealthBehaviorLoggingService.HealthBehaviorLoggingService;
 import ie.nci.PatientRegistrationService.PatientRegistrationService;
 import io.grpc.BindableService;
 import io.grpc.Grpc;
@@ -18,6 +19,7 @@ public class GrpcServer {
         /* Grpc will find a suitable port to run the services (see "0" below) */
         server = Grpc.newServerBuilderForPort(0, InsecureServerCredentials.create())
                 .addService((BindableService) new PatientRegistrationService())
+                .addService((BindableService) new HealthBehaviorLoggingService())
                 .build()
                 .start();
         JmDnsServiceRegistration.register("_gRPCserver._tcp.local.", server.getPort());
