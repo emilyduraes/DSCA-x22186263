@@ -1,5 +1,6 @@
 package ie.nci.Server;
 
+import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisService;
 import ie.nci.HealthBehaviorLoggingService.HealthBehaviorLoggingService;
 import ie.nci.PatientRegistrationService.PatientRegistrationService;
 import ie.nci.RealTimeMonitoringService.RealTimeMonitoringService;
@@ -22,6 +23,7 @@ public class GrpcServer {
                 .addService((BindableService) new PatientRegistrationService()) //unary service
                 .addService((BindableService) new HealthBehaviorLoggingService()) //client-stream service
                 .addService((BindableService) new RealTimeMonitoringService()) //server-stream service
+                .addService((BindableService) new CollaborativeDiagnosisService()) //bidirectional-stream service
                 .build()
                 .start();
         JmDnsServiceRegistration.register("_gRPCserver._tcp.local.", server.getPort());

@@ -1,5 +1,9 @@
 package ie.nci.Client;
 
+import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisRequest;
+import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisResponse;
+import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisServiceGrpc;
+import ie.nci.CollaborativeDiagnosisService.Diagnosis;
 import ie.nci.HealthBehaviorLoggingService.*;
 import ie.nci.PatientRegistrationService.Patient;
 import ie.nci.PatientRegistrationService.PatientRegistrationServiceGrpc;
@@ -30,6 +34,7 @@ public class ControllerGUI implements ActionListener {
     private final RealTimeMonitoringServiceGrpc.RealTimeMonitoringServiceBlockingStub blockingStubRealTimeMonitoring;
 
     private final HealthBehaviorLoggingServiceGrpc.HealthBehaviorLoggingServiceStub asyncHealthBehaviorLoggingServiceStub; //async stub
+    private final CollaborativeDiagnosisServiceGrpc.CollaborativeDiagnosisServiceStub asyncCollaborativeDiagnosisServiceStub; //async stub
     static Random rand = new Random();
 
     private JTextField PatientRegistrationPPSEntry, PatientRegistrationNameEntry,
@@ -44,6 +49,7 @@ public class ControllerGUI implements ActionListener {
 
         // async calls (for client-streaming)
         asyncHealthBehaviorLoggingServiceStub = HealthBehaviorLoggingServiceGrpc.newStub(channel);
+        asyncCollaborativeDiagnosisServiceStub = CollaborativeDiagnosisServiceGrpc.newStub(channel);
     }// end constructor
 
     //panel for the service Patient Registration
@@ -127,27 +133,7 @@ public class ControllerGUI implements ActionListener {
         }
     }// end method
 
-    public static void main(String[] args) throws InterruptedException {
-
-        String target;
-
-        // Service discovery part
-        JmDnsServiceDiscovery jmDnsServiceDiscovery = new JmDnsServiceDiscovery();
-        JmDnsServiceDiscovery.find("_gRPCserver._tcp.local.");	// service name
-        do {
-            target = jmDnsServiceDiscovery.getLocGrpc();
-            System.out.println("jmDnsServiceDiscovery: " + target);
-        } while (target.length()<2);		// wait for the service to be discovered
-
-        ManagedChannel channel = Grpc.newChannelBuilder(target, InsecureChannelCredentials.create())
-                .build();
-
-        ControllerGUI client = new ControllerGUI(channel);
-        client.build();			// unary type
-        client.clientSideRegisterExercise(); // client-streaming type
-        client.clientSideGetVitalSigns(); // server-streaming type
-    }// end method
-
+    // Run register from PatientRegistrationService (unary RPC)
     private void build() {
 
         JFrame frame = new JFrame("Services Controller");
@@ -175,6 +161,7 @@ public class ControllerGUI implements ActionListener {
         frame.setVisible(true);
     }// end method
 
+    // Run registerExercise from HealthBehaviorLoggingService (client streaming RPC)
     public void clientSideRegisterExercise() {
         logger.info("Calling gRPC client streaming type (from the client side)");
 
@@ -193,7 +180,7 @@ public class ControllerGUI implements ActionListener {
 
             @Override
             public void onCompleted() {
-                System.out.println("Stream completed");
+                System.out.println("Register Exercise Stream completed");
             }
         };
 
@@ -216,6 +203,7 @@ public class ControllerGUI implements ActionListener {
         requestObserver.onCompleted();
     }// end method
 
+    // Run getVitalSigns from RealTimeMonitoringService (server streaming RPC)
     public void clientSideGetVitalSigns() {
         logger.info("Calling gRPC server streaming type (from the client side)");
 
@@ -233,4 +221,65 @@ public class ControllerGUI implements ActionListener {
             return;
         }
     } // end method
+
+    // Run getDiagnosis from CollaborativeDiagnosisService (Bi-directional streaming RPC)
+    public void clientSideGetDiagnosis() {
+        logger.info("Calling gRPC bi-directional streaming type (from the client side)");
+        StreamObserver<CollaborativeDiagnosisRequest> requestObserver =
+                asyncCollaborativeDiagnosisServiceStub.getDiagnosis(new StreamObserver<CollaborativeDiagnosisResponse>() {
+                    @Override
+                    public void onNext(CollaborativeDiagnosisResponse value) {
+                        System.out.println("Bi-di Client Received: " + value.getDiagnosis());
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        t.printStackTrace();
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        System.out.println("Bi-di Client: Stream completed");
+                    }
+                });
+
+        requestObserver.onNext(CollaborativeDiagnosisRequest.newBuilder().setDiagnosis(Diagnosis.newBuilder()
+                        .setDiagnosis("")
+                        .setHealthcareProvider("")
+                        .setPatientPPS("")
+                        .build())
+                .build());
+        for (int i=0; i<rand.nextInt(10); i++){
+            requestObserver.onNext(CollaborativeDiagnosisRequest.newBuilder().setDiagnosis(Diagnosis.newBuilder()
+                            .setDiagnosis("")
+                            .setHealthcareProvider("")
+                            .setPatientPPS("")
+                            .build())
+                    .build());
+        }
+
+        requestObserver.onCompleted();
+    } // end method
+
+    public static void main(String[] args) throws InterruptedException {
+
+        String target;
+
+        // Service discovery part
+        JmDnsServiceDiscovery jmDnsServiceDiscovery = new JmDnsServiceDiscovery();
+        JmDnsServiceDiscovery.find("_gRPCserver._tcp.local.");	// service name
+        do {
+            target = jmDnsServiceDiscovery.getLocGrpc();
+            System.out.println("jmDnsServiceDiscovery: " + target);
+        } while (target.length()<2);		// wait for the service to be discovered
+
+        ManagedChannel channel = Grpc.newChannelBuilder(target, InsecureChannelCredentials.create())
+                .build();
+
+        ControllerGUI client = new ControllerGUI(channel);
+        client.build();			// unary type
+        client.clientSideRegisterExercise(); // client-streaming type
+        client.clientSideGetVitalSigns(); // server-streaming type
+        client.clientSideGetDiagnosis(); // bi-directional streaming type
+    }// end main method
 } // end class

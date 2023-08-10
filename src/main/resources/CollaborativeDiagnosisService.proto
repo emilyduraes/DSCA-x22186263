@@ -1,0 +1,26 @@
+// Bidirectional Streaming API
+
+syntax = "proto3";
+option java_multiple_files =  true;
+option java_package = "ie.nci.CollaborativeDiagnosisService";
+option java_outer_classname = "CollaborativeDiagnosisServiceImpl";
+
+package CollaborativeDiagnosisService;
+
+service CollaborativeDiagnosisService {
+  rpc getDiagnosis(stream CollaborativeDiagnosisRequest) returns (stream CollaborativeDiagnosisResponse);
+}
+
+message Diagnosis {
+  string healthcareProvider = 1;
+  string patientPPS = 2;
+  string diagnosis = 3;
+}
+
+message CollaborativeDiagnosisRequest {
+  Diagnosis diagnosis = 1;
+}
+
+message CollaborativeDiagnosisResponse {
+  Diagnosis diagnosis = 1;
+}
