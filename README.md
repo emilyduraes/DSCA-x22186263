@@ -8,8 +8,7 @@
 
 ---
 ### Project domain: Smart Health System
-This system aims to give its user an holistic approach to their health, connecting their doctors with all data necessary for a healthy way of living. Below, a diagram to describe how the project architecture is designed.
-
+This system aims to give its user an holistic approach to their health, connecting their doctors with all data necessary for a healthy way of living. 
 
 ###Services description:
 **Patient Registration Service (Unary API)**: Allow patients to register with the system by sending their personal information, medical history, and contact details through a unary API call.
