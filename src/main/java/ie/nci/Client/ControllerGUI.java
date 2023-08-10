@@ -1,9 +1,6 @@
 package ie.nci.Client;
 
-import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisRequest;
-import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisResponse;
-import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisServiceGrpc;
-import ie.nci.CollaborativeDiagnosisService.Diagnosis;
+import ie.nci.CollaborativeDiagnosisService.*;
 import ie.nci.HealthBehaviorLoggingService.*;
 import ie.nci.PatientRegistrationService.Patient;
 import ie.nci.PatientRegistrationService.PatientRegistrationServiceGrpc;
@@ -38,6 +35,7 @@ public class ControllerGUI implements ActionListener {
     private final CollaborativeDiagnosisServiceGrpc.CollaborativeDiagnosisServiceStub asyncCollaborativeDiagnosisServiceStub; //async stub
     static Random rand = new Random();
     static LocalDate date = LocalDate.now();
+    static String[] ppsNumbers = {"7700225VH", "5452407DH", "1241125LH", "6993459TH", "4115381JA", "8268048MA", "4835734QA", "9857460SH"};
 
     private JTextField PatientRegistrationPPSEntry, PatientRegistrationNameEntry,
                        PatientRegistrationAgeEntry, PatientRegistrationAddressEntry,
@@ -237,6 +235,9 @@ public class ControllerGUI implements ActionListener {
     // Run getDiagnosis from CollaborativeDiagnosisService (Bi-directional streaming RPC)
     public void clientSideGetDiagnosis() {
         logger.info("Calling gRPC bi-directional streaming type (from the client side)");
+        DiagnosisTypes randDiagnosis = DiagnosisTypes.randomDiagnosisTypes();
+        HealthCareProviders randHealthCareProvider = HealthCareProviders.randomHealthCareProviders();
+
         StreamObserver<CollaborativeDiagnosisRequest> requestObserver =
                 asyncCollaborativeDiagnosisServiceStub.getDiagnosis(new StreamObserver<CollaborativeDiagnosisResponse>() {
                     @Override
@@ -256,16 +257,19 @@ public class ControllerGUI implements ActionListener {
                 });
 
         requestObserver.onNext(CollaborativeDiagnosisRequest.newBuilder().setDiagnosis(Diagnosis.newBuilder()
-                        .setDiagnosis("")
-                        .setHealthcareProvider("")
-                        .setPatientPPS("")
+                        .setDiagnosis(randDiagnosis.toString())
+                        .setHealthcareProvider(randHealthCareProvider.toString())
+                        .setPatientPPS(PPSGenerator.getRandomPPS(ppsNumbers))
                         .build())
                 .build());
         for (int i=0; i<rand.nextInt(10); i++){
+            DiagnosisTypes randDiagnosis2 = DiagnosisTypes.randomDiagnosisTypes();
+            HealthCareProviders randHealthCareProvider2 = HealthCareProviders.randomHealthCareProviders();
+
             requestObserver.onNext(CollaborativeDiagnosisRequest.newBuilder().setDiagnosis(Diagnosis.newBuilder()
-                            .setDiagnosis("")
-                            .setHealthcareProvider("")
-                            .setPatientPPS("")
+                            .setDiagnosis(randDiagnosis2.toString())
+                            .setHealthcareProvider(randHealthCareProvider2.toString())
+                            .setPatientPPS(PPSGenerator.getRandomPPS(ppsNumbers))
                             .build())
                     .build());
         }
