@@ -1,5 +1,6 @@
 package ie.nci.Server;
 
+import ie.nci.Authentication.AuthorizationServerInterceptor;
 import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisService;
 import ie.nci.HealthBehaviorLoggingService.HealthBehaviorLoggingService;
 import ie.nci.PatientRegistrationService.PatientRegistrationService;
@@ -7,6 +8,7 @@ import ie.nci.RealTimeMonitoringService.RealTimeMonitoringService;
 import io.grpc.Grpc;
 import io.grpc.Server;
 import io.grpc.InsecureServerCredentials;
+import io.grpc.ServerBuilder;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -18,13 +20,23 @@ public class GrpcServer {
 
     private void start() throws IOException, InterruptedException {
         /* Grpc will find a suitable port to run the services (see "0" below) */
-        server = Grpc.newServerBuilderForPort(0, InsecureServerCredentials.create())
-                .addService(new PatientRegistrationService()) //unary service
-                .addService(new HealthBehaviorLoggingService()) //client-stream service
-                .addService(new RealTimeMonitoringService()) //server-stream service
-                .addService(new CollaborativeDiagnosisService()) //bidirectional-stream service
-                .build()
-                .start();
+        server = ServerBuilder.forPort(0)
+                    .addService(new PatientRegistrationService()) //unary service
+                    .addService(new HealthBehaviorLoggingService()) //client-stream service
+                    .addService(new RealTimeMonitoringService()) //server-stream service
+                    .addService(new CollaborativeDiagnosisService()) //bidirectional-stream service
+                    .intercept(new AuthorizationServerInterceptor())
+                    .build()
+                    .start();
+
+
+//                Grpc.newServerBuilderForPort(0, InsecureServerCredentials.create())
+//                .addService(new PatientRegistrationService()) //unary service
+//                .addService(new HealthBehaviorLoggingService()) //client-stream service
+//                .addService(new RealTimeMonitoringService()) //server-stream service
+//                .addService(new CollaborativeDiagnosisService()) //bidirectional-stream service
+//                .build()
+//                .start();
         JmDnsServiceRegistration.register("_gRPCserver._tcp.local.", server.getPort());
         logger.info("Server started, listening on " + server.getPort());
         Runtime.getRuntime().addShutdownHook(new Thread() {

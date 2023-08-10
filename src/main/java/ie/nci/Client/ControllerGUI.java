@@ -1,5 +1,7 @@
 package ie.nci.Client;
 
+import ie.nci.Authentication.BearerToken;
+import ie.nci.Authentication.Constants;
 import ie.nci.CollaborativeDiagnosisService.*;
 import ie.nci.HealthBehaviorLoggingService.*;
 import ie.nci.PatientRegistrationService.Patient;
@@ -13,6 +15,8 @@ import ie.nci.RealTimeMonitoringService.VitalSignsResponse;
 import ie.nci.Server.JmDnsServiceDiscovery;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -43,13 +47,20 @@ public class ControllerGUI implements ActionListener {
 
     /** Construct client for accessing server using the existing channel. */
     public ControllerGUI(Channel channel) {
+        String jwt = getJwt();
+        BearerToken token = new BearerToken(jwt);
+
         // The sync calls (blocking)
-        blockingStubPatientRegistration = PatientRegistrationServiceGrpc.newBlockingStub(channel);
-        blockingStubRealTimeMonitoring = RealTimeMonitoringServiceGrpc.newBlockingStub(channel);
+        blockingStubPatientRegistration = PatientRegistrationServiceGrpc.newBlockingStub(channel)
+                                                .withCallCredentials(token);
+        blockingStubRealTimeMonitoring = RealTimeMonitoringServiceGrpc.newBlockingStub(channel)
+                                                .withCallCredentials(token);
 
         // async calls (for client-streaming)
-        asyncHealthBehaviorLoggingServiceStub = HealthBehaviorLoggingServiceGrpc.newStub(channel);
-        asyncCollaborativeDiagnosisServiceStub = CollaborativeDiagnosisServiceGrpc.newStub(channel);
+        asyncHealthBehaviorLoggingServiceStub = HealthBehaviorLoggingServiceGrpc.newStub(channel)
+                                                    .withCallCredentials(token);
+        asyncCollaborativeDiagnosisServiceStub = CollaborativeDiagnosisServiceGrpc.newStub(channel)
+                                                    .withCallCredentials(token);
     }// end constructor
 
     //panel for the service Patient Registration
@@ -277,9 +288,17 @@ public class ControllerGUI implements ActionListener {
         requestObserver.onCompleted();
     } // end method
 
+    private static String getJwt() {
+        return Jwts.builder()
+                .setSubject("GUI_Client") // client's identifier
+                .signWith(SignatureAlgorithm.HS256, Constants.JWT_SIGNING_KEY)
+                .compact();
+    }
+
     public static void main(String[] args) throws InterruptedException {
 
         String target;
+        int port;
 
         // Service discovery part
         JmDnsServiceDiscovery jmDnsServiceDiscovery = new JmDnsServiceDiscovery();
@@ -289,8 +308,15 @@ public class ControllerGUI implements ActionListener {
             System.out.println("jmDnsServiceDiscovery: " + target);
         } while (target.length()<2);		// wait for the service to be discovered
 
-        ManagedChannel channel = Grpc.newChannelBuilder(target, InsecureChannelCredentials.create())
-                .build();
+        port = Integer.parseInt(target.substring(target.lastIndexOf(":")+1));
+
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port)
+                                    .usePlaintext()
+                                    .build();
+
+
+//                Grpc.newChannelBuilder(target, InsecureChannelCredentials.create())
+//                .build();
 
         ControllerGUI client = new ControllerGUI(channel);
         client.build();			// unary type

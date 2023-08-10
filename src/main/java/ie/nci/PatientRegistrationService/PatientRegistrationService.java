@@ -1,5 +1,6 @@
 package ie.nci.PatientRegistrationService;
 
+import ie.nci.Authentication.Constants;
 import io.grpc.stub.StreamObserver;
 import java.util.logging.Logger;
 
@@ -11,6 +12,9 @@ public class PatientRegistrationService extends PatientRegistrationServiceGrpc.P
      */
     @Override
     public void register(PatientRequest patientRequest, StreamObserver<PatientResponse> patientResponseObserver){
+        String clientId = Constants.CLIENT_ID_CONTEXT_KEY.get();
+        System.out.println("Processing request from " + clientId);
+
         //prepare the value to be set back
         Patient patient = patientRequest.getPatient();
 

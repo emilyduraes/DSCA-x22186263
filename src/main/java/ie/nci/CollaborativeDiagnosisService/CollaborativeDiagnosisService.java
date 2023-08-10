@@ -1,5 +1,6 @@
 package ie.nci.CollaborativeDiagnosisService;
 
+import ie.nci.Authentication.Constants;
 import io.grpc.stub.StreamObserver;
 import java.util.logging.Logger;
 
@@ -14,6 +15,7 @@ public class CollaborativeDiagnosisService extends CollaborativeDiagnosisService
      */
     public StreamObserver<CollaborativeDiagnosisRequest> getDiagnosis(StreamObserver<CollaborativeDiagnosisResponse> responseObserver) {
         logger.info("Calling gRPC bi-directional streaming type (from the server side)");
+
         return new StreamObserver<>() {
             @Override
             public void onNext(CollaborativeDiagnosisRequest value) {
