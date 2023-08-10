@@ -14,6 +14,13 @@ service HealthBehaviorLoggingService {
 message Exercise {
   string type = 1;
   int32 time = 2;
+  Date date = 3;
+}
+
+message Date {
+  int32 year = 1;
+  int32 month = 2;
+  int32 day = 3;
 }
 
 message ExerciseRequest {

@@ -22,6 +22,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +37,7 @@ public class ControllerGUI implements ActionListener {
     private final HealthBehaviorLoggingServiceGrpc.HealthBehaviorLoggingServiceStub asyncHealthBehaviorLoggingServiceStub; //async stub
     private final CollaborativeDiagnosisServiceGrpc.CollaborativeDiagnosisServiceStub asyncCollaborativeDiagnosisServiceStub; //async stub
     static Random rand = new Random();
+    static LocalDate date = LocalDate.now();
 
     private JTextField PatientRegistrationPPSEntry, PatientRegistrationNameEntry,
                        PatientRegistrationAgeEntry, PatientRegistrationAddressEntry,
@@ -189,6 +191,11 @@ public class ControllerGUI implements ActionListener {
         requestObserver.onNext(ExerciseRequest.newBuilder().setExercise(Exercise.newBuilder()
                                                                                 .setTime(rand.nextInt(60))
                                                                                 .setType(randExercise.toString())
+                                                                                .setDate(Date.newBuilder()
+                                                                                        .setYear(date.getYear())
+                                                                                        .setMonth(date.getMonthValue())
+                                                                                        .setDay(date.getDayOfMonth())
+                                                                                        .build())
                                                                                 .build())
                                                                         .build());
         for (int i=0; i< rand.nextInt(10); i++){
@@ -196,6 +203,11 @@ public class ControllerGUI implements ActionListener {
             requestObserver.onNext(ExerciseRequest.newBuilder().setExercise(Exercise.newBuilder()
                                                                                     .setTime(rand.nextInt(60))
                                                                                     .setType(randExercise2.toString())
+                                                                                    .setDate(Date.newBuilder()
+                                                                                            .setYear(date.getYear())
+                                                                                            .setMonth(date.getMonthValue())
+                                                                                            .setDay(date.getDayOfMonth())
+                                                                                            .build())
                                                                                     .build())
                                                                             .build());
         }
