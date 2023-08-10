@@ -1,7 +1,6 @@
 package ie.nci.HealthBehaviorLoggingService;
 
 import io.grpc.stub.StreamObserver;
-
 import java.time.LocalDate;
 import java.util.logging.Logger;
 
@@ -18,7 +17,7 @@ public class HealthBehaviorLoggingService extends HealthBehaviorLoggingServiceGr
 
         logger.info("Calling gRPC client streaming type (from the server side)");
 
-        return new StreamObserver<ExerciseRequest>() {
+        return new StreamObserver<>() {
 
             @Override
             public void onNext(ExerciseRequest value) {

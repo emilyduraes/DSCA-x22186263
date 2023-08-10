@@ -1,7 +1,6 @@
 package ie.nci.PatientRegistrationService;
 
 import io.grpc.stub.StreamObserver;
-
 import java.util.logging.Logger;
 
 public class PatientRegistrationService extends PatientRegistrationServiceGrpc.PatientRegistrationServiceImplBase {

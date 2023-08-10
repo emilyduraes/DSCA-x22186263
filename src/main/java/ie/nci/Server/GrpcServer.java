@@ -4,7 +4,6 @@ import ie.nci.CollaborativeDiagnosisService.CollaborativeDiagnosisService;
 import ie.nci.HealthBehaviorLoggingService.HealthBehaviorLoggingService;
 import ie.nci.PatientRegistrationService.PatientRegistrationService;
 import ie.nci.RealTimeMonitoringService.RealTimeMonitoringService;
-import io.grpc.BindableService;
 import io.grpc.Grpc;
 import io.grpc.Server;
 import io.grpc.InsecureServerCredentials;
@@ -20,10 +19,10 @@ public class GrpcServer {
     private void start() throws IOException, InterruptedException {
         /* Grpc will find a suitable port to run the services (see "0" below) */
         server = Grpc.newServerBuilderForPort(0, InsecureServerCredentials.create())
-                .addService((BindableService) new PatientRegistrationService()) //unary service
-                .addService((BindableService) new HealthBehaviorLoggingService()) //client-stream service
-                .addService((BindableService) new RealTimeMonitoringService()) //server-stream service
-                .addService((BindableService) new CollaborativeDiagnosisService()) //bidirectional-stream service
+                .addService(new PatientRegistrationService()) //unary service
+                .addService(new HealthBehaviorLoggingService()) //client-stream service
+                .addService(new RealTimeMonitoringService()) //server-stream service
+                .addService(new CollaborativeDiagnosisService()) //bidirectional-stream service
                 .build()
                 .start();
         JmDnsServiceRegistration.register("_gRPCserver._tcp.local.", server.getPort());

@@ -1,7 +1,5 @@
 package ie.nci.CollaborativeDiagnosisService;
 
-import ie.nci.HealthBehaviorLoggingService.ExercisesTypes;
-
 import java.util.Random;
 
 public enum DiagnosisTypes {
