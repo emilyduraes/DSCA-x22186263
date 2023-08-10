@@ -17,7 +17,7 @@ public class RealTimeMonitoringService extends RealTimeMonitoringServiceGrpc.Rea
     public void getVitalSigns(VitalSignsRequest req, StreamObserver<VitalSignsResponse> responseObserver) {
         logger.info("Calling gRPC server streaming type (from the server side)");
         VitalSignsResponse reply = VitalSignsResponse.newBuilder().setVitalSigns(VitalSigns.newBuilder()
-                        // logic to get a random number between two given values
+                                            // logic to get a random number between two given values
                         .setBloodPressure((int)((Math.random() * (11 - 7)) + 7) + "/" + (int)((Math.random() * (16 - 11)) + 11))
                         .setBodyTemperature((int) ((Math.random() * (42 - 35)) + 35) + " Celsius")
                         .setBreathingRate((int)((Math.random() * (18 - 10)) + 10) + " per minute")
