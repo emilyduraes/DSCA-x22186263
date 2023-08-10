@@ -5,6 +5,10 @@ import ie.nci.PatientRegistrationService.Patient;
 import ie.nci.PatientRegistrationService.PatientRegistrationServiceGrpc;
 import ie.nci.PatientRegistrationService.PatientRequest;
 import ie.nci.PatientRegistrationService.PatientResponse;
+import ie.nci.RealTimeMonitoringService.RealTimeMonitoringServiceGrpc;
+import ie.nci.RealTimeMonitoringService.VitalSigns;
+import ie.nci.RealTimeMonitoringService.VitalSignsRequest;
+import ie.nci.RealTimeMonitoringService.VitalSignsResponse;
 import ie.nci.Server.JmDnsServiceDiscovery;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
@@ -14,13 +18,18 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Iterator;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ControllerGUI implements ActionListener {
     private static final Logger logger = Logger.getLogger(ControllerGUI.class.getName());
     private final PatientRegistrationServiceGrpc.PatientRegistrationServiceBlockingStub blockingStubPatientRegistration;
-    private final HealthBehaviorLoggingServiceGrpc.HealthBehaviorLoggingServiceStub asyncHealthBehaviorLoggingServiceStub;
+    private final RealTimeMonitoringServiceGrpc.RealTimeMonitoringServiceBlockingStub blockingStubRealTimeMonitoring;
+
+    private final HealthBehaviorLoggingServiceGrpc.HealthBehaviorLoggingServiceStub asyncHealthBehaviorLoggingServiceStub; //async stub
     static Random rand = new Random();
 
     private JTextField PatientRegistrationPPSEntry, PatientRegistrationNameEntry,
@@ -31,10 +40,11 @@ public class ControllerGUI implements ActionListener {
     public ControllerGUI(Channel channel) {
         // The sync calls (blocking)
         blockingStubPatientRegistration = PatientRegistrationServiceGrpc.newBlockingStub(channel);
+        blockingStubRealTimeMonitoring = RealTimeMonitoringServiceGrpc.newBlockingStub(channel);
 
         // async calls (for client-streaming)
         asyncHealthBehaviorLoggingServiceStub = HealthBehaviorLoggingServiceGrpc.newStub(channel);
-    }
+    }// end constructor
 
     //panel for the service Patient Registration
     private JPanel getPatientRegistrationJPanel() {
@@ -84,7 +94,7 @@ public class ControllerGUI implements ActionListener {
 
         return panel;
 
-    }
+    }// end method
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -115,7 +125,7 @@ public class ControllerGUI implements ActionListener {
             PatientRegistrationReply.setText(String.valueOf(response.getPatient()));
 
         }
-    }
+    }// end method
 
     public static void main(String[] args) throws InterruptedException {
 
@@ -134,8 +144,9 @@ public class ControllerGUI implements ActionListener {
 
         ControllerGUI client = new ControllerGUI(channel);
         client.build();			// unary type
-        client.registerExercise(); // client-streaming type
-    }
+        client.clientSideRegisterExercise(); // client-streaming type
+        client.clientSideGetVitalSigns(); // server-streaming type
+    }// end method
 
     private void build() {
 
@@ -162,9 +173,9 @@ public class ControllerGUI implements ActionListener {
         frame.add(panel);
         frame.pack();
         frame.setVisible(true);
-    }
+    }// end method
 
-    public void registerExercise() {
+    public void clientSideRegisterExercise() {
         logger.info("Calling gRPC client streaming type (from the client side)");
 
         ExercisesTypes randExercise = ExercisesTypes.randomExercisesTypes();
@@ -203,5 +214,23 @@ public class ControllerGUI implements ActionListener {
         }
 
         requestObserver.onCompleted();
-    }
-}
+    }// end method
+
+    public void clientSideGetVitalSigns() {
+        logger.info("Calling gRPC server streaming type (from the client side)");
+
+        try {
+            VitalSignsRequest request = VitalSignsRequest.newBuilder().setVitalSigns(VitalSigns.newBuilder().build()).build();
+            Iterator<VitalSignsResponse> reply = blockingStubRealTimeMonitoring
+                    .withDeadlineAfter(1, TimeUnit.SECONDS)
+                    .getVitalSigns(request);
+            while(reply.hasNext()) {
+                System.out.println(reply.next());		// print all messages from the server
+            }
+            logger.info("End of server streaming");
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+            return;
+        }
+    } // end method
+} // end class

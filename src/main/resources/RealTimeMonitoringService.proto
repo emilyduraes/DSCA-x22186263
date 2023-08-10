@@ -1,0 +1,27 @@
+// Server Streaming API
+
+syntax = "proto3";
+option java_multiple_files =  true;
+option java_package = "ie.nci.RealTimeMonitoringService";
+option java_outer_classname = "RealTimeMonitoringServiceImpl";
+
+package RealTimeMonitoringService;
+
+service RealTimeMonitoringService {
+  rpc getVitalSigns(VitalSignsRequest) returns (stream VitalSignsResponse);
+}
+
+message VitalSigns {
+  string pulseRate = 1;
+  string bodyTemperature = 2;
+  string bloodPressure = 3;
+  string breathingRate = 4;
+}
+
+message VitalSignsRequest {
+  VitalSigns vitalSigns = 1;
+}
+
+message VitalSignsResponse {
+  VitalSigns vitalSigns = 1;
+}
