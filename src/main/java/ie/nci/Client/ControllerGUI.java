@@ -22,7 +22,6 @@ public class ControllerGUI implements ActionListener {
     private final PatientRegistrationServiceGrpc.PatientRegistrationServiceBlockingStub blockingStubPatientRegistration;
     private final HealthBehaviorLoggingServiceGrpc.HealthBehaviorLoggingServiceStub asyncHealthBehaviorLoggingServiceStub;
     static Random rand = new Random();
-    static ExercisesTypes randExercise = ExercisesTypes.randomExercisesTypes();
 
     private JTextField PatientRegistrationPPSEntry, PatientRegistrationNameEntry,
                        PatientRegistrationAgeEntry, PatientRegistrationAddressEntry,
@@ -168,6 +167,8 @@ public class ControllerGUI implements ActionListener {
     public void registerExercise() {
         logger.info("Calling gRPC client streaming type (from the client side)");
 
+        ExercisesTypes randExercise = ExercisesTypes.randomExercisesTypes();
+
         StreamObserver<ExerciseResponse> responseObserver = new StreamObserver<ExerciseResponse>() {
             @Override
             public void onNext(ExerciseResponse value) {
@@ -188,14 +189,15 @@ public class ControllerGUI implements ActionListener {
         // send a stream back to the server
         StreamObserver<ExerciseRequest> requestObserver = asyncHealthBehaviorLoggingServiceStub.registerExercise(responseObserver);
         requestObserver.onNext(ExerciseRequest.newBuilder().setExercise(Exercise.newBuilder()
-                                                                                .setTime(rand.nextInt(6))
+                                                                                .setTime(rand.nextInt(60))
                                                                                 .setType(randExercise.toString())
                                                                                 .build())
                                                                         .build());
         for (int i=0; i< rand.nextInt(10); i++){
+            ExercisesTypes randExercise2 = ExercisesTypes.randomExercisesTypes();
             requestObserver.onNext(ExerciseRequest.newBuilder().setExercise(Exercise.newBuilder()
-                                                                                    .setTime(rand.nextInt(6))
-                                                                                    .setType(randExercise.toString())
+                                                                                    .setTime(rand.nextInt(60))
+                                                                                    .setType(randExercise2.toString())
                                                                                     .build())
                                                                             .build());
         }
