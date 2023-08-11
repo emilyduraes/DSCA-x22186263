@@ -103,7 +103,7 @@ public class ControllerGUI implements ActionListener {
         panel.add(button);
         panel.add(Box.createRigidArea(new Dimension(10, 0)));
 
-        PatientRegistrationReply = new JTextField("", 100);
+        PatientRegistrationReply = new JTextField("", 40);
         PatientRegistrationReply.setEditable(false);
         panel.add(PatientRegistrationReply);
 
